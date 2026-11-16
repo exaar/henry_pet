@@ -76,6 +76,8 @@ const INDEX: &str = r#"{
     "POST /bond": "{\"bond\": 0.42} - set her bond with the user (0..1; levels awful|bad|neutral|good|amazing|owner, shown in /status.bond)",
     "POST /needs": "{\"sleepiness\": 0.5, \"boredom\": 0.1, \"playfulness\": 0.9} - set her needs (0..1, any subset)",
     "POST /card": "{\"show\": true} - show her status card (the tray hover card) without hovering; false hands it back to the hover. {\"pin\": true|false} pins / unpins it (pinned = stays open, like the pushpin on the card), {\"x\": 100, \"y\": 100} moves it there and pins it; /status.card has pinned + rect",
+    "GET /update": "update check (daily, GitHub releases): current, latest, available, url, checked_at, error, enabled",
+    "POST /update": "check for an update now",
     "POST /hide": "hide Henry",
     "POST /show": "show Henry"
   }
@@ -107,6 +109,11 @@ fn handle(m: &Method, url: &str, body: &str, ctl: &Arc<Mutex<Control>>, on_chang
     match (m, path) {
         (Method::Get, "/") => (200, INDEX.to_string()),
         (Method::Get, "/status") => (200, ctl.lock().unwrap().status.to_string()),
+        (Method::Get, "/update") => (200, crate::update::status_json().to_string()),
+        (Method::Post, "/update") => {
+            crate::update::check_now();
+            (200, json!({"ok": true, "note": "checking; GET /update in a few seconds"}).to_string())
+        }
         (Method::Get, "/hermes-plugin") => {
             // installed layout: <install dir>/hermes-plugin/{INSTALL.md, henry_pet/}; dev builds: the repo copy
             let exe_dir = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf()));

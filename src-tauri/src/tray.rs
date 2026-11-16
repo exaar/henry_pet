@@ -6,6 +6,41 @@ use tauri::{AppHandle, Manager, Wry};
 struct HideItem(CheckMenuItem<Wry>);
 struct BedItem(CheckMenuItem<Wry>);
 struct SkinItems(Vec<(&'static str, CheckMenuItem<Wry>)>);
+struct TrayMenu(Menu<Wry>);
+/// The "Update available" item once shown (its version), so a later check only relabels it.
+struct UpdateItem(std::sync::Mutex<Option<(String, MenuItem<Wry>)>>);
+
+/// A newer release is out (update.rs): "Update available: <ver>" at the top of the menu (any thread).
+pub fn show_update(app: &AppHandle, u: &crate::update::State) {
+    let Some(ver) = u.available().map(str::to_string) else { return };
+    let h = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        let (Some(menu), Some(slot)) = (h.try_state::<TrayMenu>(), h.try_state::<UpdateItem>()) else { return };
+        let mut slot = slot.0.lock().unwrap();
+        let label = format!("Update available: {ver}");
+        match slot.as_mut() {
+            Some((shown, item)) => {
+                if *shown != ver {
+                    let _ = item.set_text(&label);
+                    *shown = ver;
+                }
+            }
+            None => {
+                let Ok(item) = MenuItem::with_id(&h, "update", &label, true, None::<&str>) else { return };
+                let Ok(sep) = PredefinedMenuItem::separator(&h) else { return };
+                let _ = menu.0.insert(&item, 0);
+                let _ = menu.0.insert(&sep, 1);
+                *slot = Some((ver, item));
+            }
+        }
+    });
+}
+
+/// Open a URL in the default browser (no console window).
+fn open_url(url: &str) {
+    use std::os::windows::process::CommandExt;
+    let _ = std::process::Command::new("rundll32").args(["url.dll,FileProtocolHandler", url]).creation_flags(0x0800_0000).spawn();
+}
 
 fn check_skin(items: &[(&'static str, CheckMenuItem<Wry>)], id: &str) {
     for (sid, it) in items {
@@ -66,6 +101,8 @@ pub fn build(app: &AppHandle, s: &Settings) -> tauri::Result<()> {
     }
     items.extend([&sound as &dyn tauri::menu::IsMenuItem<Wry>, &bed, &mischief, &ret, &sep, &auto, &open, &sep2, &quit]);
     let menu = Menu::with_items(app, &items)?;
+    app.manage(TrayMenu(menu.clone()));
+    app.manage(UpdateItem(std::sync::Mutex::new(None)));
 
     let tray = TrayIconBuilder::with_id("henry")
         .icon(app.default_window_icon().cloned().expect("app icon"))
@@ -142,6 +179,12 @@ pub fn build(app: &AppHandle, s: &Settings) -> tauri::Result<()> {
                 }
                 "settings" => {
                     let _ = std::process::Command::new("notepad").arg(&st.settings_path).spawn();
+                }
+                "update" => {
+                    let u = crate::update::state();
+                    if let Some(url) = u.url.or(u.page) {
+                        open_url(&url);
+                    }
                 }
                 "quit" => app.exit(0),
                 _ => {}

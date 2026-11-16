@@ -15,6 +15,7 @@ mod slinky;
 mod sound;
 mod tape;
 mod tray;
+mod update;
 mod win;
 
 use std::path::PathBuf;
@@ -32,7 +33,7 @@ pub fn save_settings(state: &AppState) {
     let c = state.ctl.lock().unwrap();
     settings::save(
         &state.settings_path,
-        &settings::Settings { size: c.size, scale: None, hidden: c.hidden, quiet_apps: c.quiet_apps.clone(), api_port: state.api_port, sound: c.sound, icon_mischief: c.mischief, skin: c.skin.clone(), bed: c.bed },
+        &settings::Settings { size: c.size, scale: None, hidden: c.hidden, quiet_apps: c.quiet_apps.clone(), api_port: state.api_port, sound: c.sound, icon_mischief: c.mischief, skin: c.skin.clone(), bed: c.bed, update_check: update::enabled() },
     );
 }
 
@@ -54,6 +55,8 @@ fn watch_settings(path: PathBuf, ctl: Arc<Mutex<brain::Control>>) {
                 c.mischief = s.icon_mischief;
                 c.skin = s.skin;
                 c.bed = s.bed;
+                drop(c);
+                update::set_enabled(s.update_check);
             }
         }
     });
@@ -63,11 +66,16 @@ fn main() {
     // refactor safety net (tape.rs): replay a recording headless, write the per-tick trace, exit
     let args: Vec<String> = std::env::args().collect();
     if let Some(i) = args.iter().position(|a| a == "--replay") {
-        let dir = PathBuf::from(&args[i + 1]);
-        let out = args.iter().position(|a| a == "--trace").map(|j| PathBuf::from(&args[j + 1])).unwrap_or_else(|| dir.join("trace.txt"));
-        brain::replay(&dir, &out);
-        return;
-    }
+        let dir = PathBuf::from(&args[i + 1]);
+
+        let out = args.iter().position(|a| a == "--trace").map(|j| PathBuf::from(&args[j + 1])).unwrap_or_else(|| dir.join("trace.txt"));
+
+        brain::replay(&dir, &out);
+
+        return;
+
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
         .setup(|app| {
@@ -98,6 +106,8 @@ fn main() {
                 save_settings(&handle.state::<AppState>());
             });
             watch_settings(path, ctl.clone());
+            let h = app.handle().clone();
+            update::spawn(dir.clone(), s.update_check, move |u| tray::show_update(&h, u));
             memfuse::spawn(dir.clone(), ctl.clone());
             brain::spawn(ctl);
             Ok(())

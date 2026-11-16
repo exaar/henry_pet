@@ -25,11 +25,13 @@ pub struct Settings {
     pub skin: String,
     /// Her bed is out (tray "Bed", PLAN #51).
     pub bed: bool,
+    /// Daily check for a newer public release (update.rs, PLAN #65); hand edit only.
+    pub update_check: bool,
 }
 
 impl Default for Settings {
     fn default() -> Self {
-        Self { size: 128, scale: None, hidden: false, quiet_apps: vec!["Resolve.exe".into()], api_port: 47821, sound: false, icon_mischief: false, skin: "henry".into(), bed: true }
+        Self { size: 128, scale: None, hidden: false, quiet_apps: vec!["Resolve.exe".into()], api_port: 47821, sound: false, icon_mischief: false, skin: "henry".into(), bed: true, update_check: true }
     }
 }
 
