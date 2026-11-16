@@ -2,7 +2,7 @@
 //! spritesheet decoded in Rust. No browser engine. The window is owned by the brain thread, which pumps
 //! its messages every frame, so every window call is same-thread and can never block on another thread.
 //!
-//! Sprites (SPRITES.md): a sheet plus `pet.json` (cell size + named animations). Without Henry's own
+//! Sprites (docs/SKINS.md): a sheet plus `pet.json` (cell size + named animations). Without Henry's own
 //! manifest the petdex placeholder layout is mapped onto the same animation names. The brain asks for a
 //! logical animation ("trot", "sleep", ...) and a direction; `Picker` walks the fallback chain, picks a
 //! variant (`sleep_curl`, `sleep_starfish`, `idle-2`, ...) and mirrors art drawn facing the other way.

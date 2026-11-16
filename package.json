@@ -1,9 +1,8 @@
 {
   "name": "henry_pet",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.4.0",
   "scripts": {
-    "fetch-placeholder": "node scripts/fetch-placeholder.mjs",
     "build:debug": "tauri build --debug --no-bundle",
     "build": "tauri build",
     "build:public": "node scripts/build-public.mjs",

@@ -2,7 +2,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["pillow>=10"]
 # ///
-"""Pack Henry's frames into the sheet the app embeds (SPRITES.md).
+"""Pack Henry's frames into the sheet the app embeds (docs/SKINS.md).
 
     uv run scripts/pack_sprites.py [SRC] [--out ui/pets/henry] [--cell 128] [--preview]
 

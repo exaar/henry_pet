@@ -8,6 +8,7 @@ the meow recording:
 - `art/` (frames, palette, `sound/meow.wav`)
 - `ui/pets/henry/` (packed spritesheet)
 - `src-tauri/icons/`
+- `docs/henry.gif`, `docs/card.png` (README images)
 
 You may use these files only as part of this application (henry_pet): to run
 it, build it from source, and redistribute unmodified builds of it. Any other

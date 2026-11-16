@@ -1,57 +1,97 @@
-# henry_pet
+<div align="center">
 
-Henry — a desktop cat for Windows (Tauri 2). She lives on your taskbar and window tops, naps in her bed, comes over to be petted, and (optionally) follows your Hermes agent's mood. Sprite format and animation names: [SPRITES.md](SPRITES.md).
+# Henry
 
-## Build
+**A pixel-art cat that lives on your Windows desktop.**
 
-Needs Rust (`rustup`, MSVC toolchain), Node (Tauri CLI), Visual Studio C++ build tools.
+She walks along your taskbar and window tops, naps in her little bed, comes over to be petted,<br>
+and, if you use [Hermes Agent](https://github.com/NousResearch/hermes-agent), keeps an eye on what your agent is doing.
+
+<img src="docs/henry.gif" alt="Henry walking, sitting, washing her face, stretching and sleeping" width="100%">
+
+[![Latest release](https://img.shields.io/github/v/release/exaar/henry_pet?label=download&color=ff8fb4)](https://github.com/exaar/henry_pet/releases/latest)
+![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-4a475a)
+![Tauri 2 + Rust](https://img.shields.io/badge/Tauri%202-Rust-4a475a)
+[![Code: MIT](https://img.shields.io/badge/code-MIT-4a475a)](LICENSE)
+
+</div>
+
+## What she does
+
+- **Lives on your screen, not in a window.** Walks the taskbar, hops onto window tops, rides along when you drag a window, and gets down again. Crosses between monitors.
+- **Has a life of her own.** Gets sleepy, bored or playful over time. Naps (in her bed, or wherever she drops), washes her face, licks her paw, scratches, stretches after waking up.
+- **Likes you, in her own way.** Stroke her with the cursor to pet her; a soft pink glow means she's enjoying it. She remembers how you treat her: your company and petting warm her up, rough throws don't.
+- **Can be picked up by the scruff**, dangles like a real cat, and can be thrown (she'd rather you didn't).
+- **Stays out of the way.** Hides in fullscreen apps, sits still in a corner in "quiet apps" (DaVinci Resolve by default), never meows over other sound. Sound is off by default.
+- **Notices when your PC works hard.** A window that keeps the GPU busy becomes a warm spot, and she goes to sit on it.
+- **Status card.** Hover her tray icon to see what she's up to and how sleepy, bored and playful she is.
+
+<img src="docs/card.png" alt="Henry's status card: walking, Hermes working, sleepy / bored / playful bars, bond" width="320">
+
+## Install
+
+1. Download **`henry_pet_<version>_x64-setup.exe`** from the [latest release](https://github.com/exaar/henry_pet/releases/latest) and run it.<br>
+   It installs per-user: no admin rights, nothing else to install.
+2. The installer isn't code-signed yet, so SmartScreen may say *"Windows protected your PC"*. Click **More info → Run anyway**.
+3. Henry appears on your taskbar. Everything else is in her tray icon.
+
+On the first run she sizes herself to your screen and turns on **Run at startup**; both can be changed in the tray.
+
+**Updates:** once a day she checks this repo for a new release. When there is one, her tray menu shows **Update available**: click it and run the installer. Settings are kept.<br>
+**Uninstall:** Windows Settings → Apps → henry_pet.
+
+## Tray menu
+
+| | |
+|---|---|
+| **Hide Henry** | Put her away for a while |
+| **Size** | 64 to 256 px |
+| **Sound** | Her meow (a real recorded one). Off by default |
+| **Bed** | Her bed on the taskbar. You can drag it anywhere |
+| **Icon mischief** | Now and then she nudges a desktop icon a little. Off by default; **Return icons** puts them all back |
+| **Run at startup** | Start with Windows |
+| **Open settings file** | `%APPDATA%\dev.exaar.henrypet\settings.json`: quiet apps, API port, update check |
+
+## Hermes Agent
+
+Henry can follow your [Hermes](https://github.com/NousResearch/hermes-agent) agent: she perks up while it thinks, gets busy while it works, waits with you when it needs your answer, and reacts when a task is done or fails. The bridge plugin ships with the installer. Just ask your Hermes:
+
+> install Henry's plugin following `%LOCALAPPDATA%\henry_pet\hermes-plugin\INSTALL.md`
+
+## Local API
+
+Henry listens on `http://127.0.0.1:47821` (localhost only), so scripts and agents can talk to her:
+
+```bash
+curl http://127.0.0.1:47821/status                                    # what she's doing, needs, mood
+curl -X POST http://127.0.0.1:47821/do   -d '{"action": "come"}'      # come to the cursor
+curl -X POST http://127.0.0.1:47821/mood -d '{"state": "waiting"}'    # show an agent state
+```
+
+`GET /` lists every endpoint.
+
+## Privacy
+
+Henry has to look at your desktop to live on it. Nothing she sees leaves your PC.
+
+- **She reads** window positions (to walk on them), the foreground app's name (fullscreen and quiet apps), cursor position and idle time, per-app GPU load (warm spot), whether audio is playing, and desktop icon positions (only with Icon mischief on).
+- **She stores** settings, her bond with you, the bed position and the last update check in `%APPDATA%\dev.exaar.henrypet\`.
+- **Network:** one request a day to GitHub's public API for the latest release. No telemetry, no accounts. The local API only answers on 127.0.0.1. `"update_check": false` in settings.json turns the update check off.
+
+## Build from source
+
+Needs [Rust](https://rustup.rs) (MSVC toolchain), [Node.js](https://nodejs.org) and the Visual Studio C++ build tools.
 
 ```bash
 npm install
-npm run fetch-placeholder   # dev-only petdex placeholder sprite -> ui/pets/placeholder (gitignored; retired skin, only via HENRY_SPRITE_DIR)
-npm run build:debug         # -> src-tauri/target/debug/henry_pet.exe
-npm run build               # release + NSIS installer (personal)
-npm run build:public        # blocked until ui/pets/henry/ has Henry's own sheet
+npm run build:debug     # quick dev build -> src-tauri/target/debug/henry_pet.exe
+npm run build:public    # release exe + installer -> src-tauri/target/release/bundle/nsis/
 ```
 
-## Layout
-
-- `src-tauri/src/brain/` — position + behaviour (Rust owns where she is and what she does): `mod.rs` (state + the tick: sense → decide → motion → animate → present, one file per phase), `pose.rs` (pose transitions as data), `world.rs`, `state.rs`
-- `src-tauri/src/tape.rs` — record / replay of every brain input (refactor safety net, `scripts/replay/`): `HENRY_RECORD=<dir>` records, `henry_pet.exe --replay <dir> --trace <file>` replays headless; same tape + same behaviour = same trace byte for byte
-- `src-tauri/src/win.rs` — Win32: monitors, fullscreen/foreground-app detection, moving the overlay
-- `src-tauri/src/tray.rs` — tray menu, autostart (HKCU Run)
-- `src-tauri/src/settings.rs` — `%APPDATA%/dev.exaar.henrypet/settings.json` (`quiet_apps` reloads live)
-- `src-tauri/src/render.rs` — native layered-window renderer for a petdex-format spritesheet (embedded by `build.rs`)
-- `src-tauri/src/icons.rs`, `sound.rs`, `memfuse.rs` — desktop icons, meow/purr, memory fuse
-
-## Agent API
-
-`http://127.0.0.1:47821` (port in settings.json `api_port`): `GET /` lists endpoints, `GET /status`, `POST /mood`, `POST /do` (incl. `jump`, `climb`, `down`, `carry`, `bed`, `movebed`, `warm`, `glow`), `POST /bond`, `POST /needs`, `POST /card` (status card without hovering; `pin`, `x`/`y` pin and move it), `GET /bed`, `POST /bed` (`show|hide|place`), `GET /icons`, `POST /icons/return`, `GET /update`, `POST /update` (check for a new release now), `POST /hide`, `POST /show`.
-
-## Hermes bridge
-
-`bash scripts/install-hermes-plugin.sh` copies `hermes-plugin/henry_pet` into the Hermes home's user plugins and runs `hermes plugins enable henry_pet`; restart Hermes to load. The installer ships the plugin too (`%LOCALAPPDATA%\henry_pet\hermes-plugin`, path also from `GET /hermes-plugin`); `hermes-plugin/INSTALL.md` is the guide for another user's agent.
-
-## Updates
-
-Once a day Henry asks GitHub for the latest release of this repo (`update.rs`, no token, nothing sent but the request). If it is newer, the tray menu gets "Update available: <version>"; clicking it downloads the installer in your browser, and running it updates Henry in place (settings kept). Turn it off with `"update_check": false` in settings.json.
-
-## Release
-
-1. Bump the version in `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, `hermes-plugin/henry_pet/plugin.yaml`.
-2. `taskkill /IM henry_pet.exe /F`, then `npm run build:public` → `src-tauri/target/release/bundle/nsis/henry_pet_<ver>_x64-setup.exe`.
-3. Users just run the new installer: it installs over the old version (per-user, no admin, no Rust needed), keeps settings. Uninstall from Windows Settings → Apps.
-4. Publish: `gh release create v<ver> <installer> -R exaar/henry_pet --title "Henry <ver>" --notes-file <notes> --latest` (the asset name must end in `-setup.exe`: the in-app update check links to it) (notes: install, SmartScreen "More info → Run anyway", Hermes plugin line, update/uninstall, what's new, SHA-256).
-
-## Dev knobs
-
-- `HENRY_ICON_LV=<hwnd>` — use a test SysListView32 instead of the desktop.
-
-- `HENRY_TIME_SCALE=<n>` — needs grow n× faster.
-- `HENRY_TRACE=<file>` — log every drawn tick (ms, anim, frame, window x, x, pin) for motion/seam checks.
-- `HENRY_UPDATE_URL=<url>` — run the update check against another releases/latest-shaped JSON (`POST /update` to check now).
-- `HENRY_START_X=<px>[,<dir>]` — start at x walking left (-1) or right (1) for ~8 s (edge / monitor-crossing tests).
+Want a different pet? The engine takes any sprite set: **[docs/SKINS.md](docs/SKINS.md)**. Code layout, the full API and dev switches: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## License
 
-Code: MIT ([LICENSE](LICENSE)). Henry's art, spritesheet, icons and meow: all rights reserved, usable only as part of this app ([art/LICENSE.md](art/LICENSE.md)).
+The code is [MIT](LICENSE). Henry herself (art, animation frames, icons and meow) is **all rights reserved** and may only be used as part of this app, see [art/LICENSE.md](art/LICENSE.md). Fork away, just bring your own cat.
+
+<div align="center"><sub>Henry is a real tuxedo cat. This is her pixel twin.</sub></div>

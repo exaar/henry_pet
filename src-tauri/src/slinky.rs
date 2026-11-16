@@ -1,5 +1,5 @@
-//! Held by the scruff: Henry's body is a soft chain (a slinky), not a rigid pendulum. Ported from the
-//! tuning page `docs/slinky-cat.html` (PHYSICS block): 9 bones of fixed length from the scruff down to
+//! Held by the scruff: Henry's body is a soft chain (a slinky), not a rigid pendulum. Ported from an
+//! interactive tuning page (its PHYSICS block): 9 bones of fixed length from the scruff down to
 //! the bottom of the art, position-based dynamics with iterations (bones pull each other both ways, so
 //! the chain never pumps itself), then two limiters top-down: angle between neighbouring bones and each
 //! bone's swing from vertical. Limiters don't add velocity, so nothing jitters against them. The drawing
