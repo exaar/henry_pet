@@ -1,0 +1,31 @@
+{
+ "_note": "Henry's fixed palette (2026-11-10): idle_2 colours minus green-key residue + 3 added by hand. Every animation uses exactly these colours; sprite_post.py --palette maps to them, pack_sprites.py checks (--snap remaps).",
+ "added": {
+  "#de6c7a": "tongue (blep)",
+  "#a9788a": "inner ear / nose, sleep",
+  "#090804": "darkest: far legs (walk)"
+ },
+ "colors": [
+  "#2f2c3f",
+  "#020123",
+  "#201e2c",
+  "#f1effd",
+  "#abaabc",
+  "#6b4a5d",
+  "#767485",
+  "#493747",
+  "#8d8b9e",
+  "#bcb9ca",
+  "#c0bc74",
+  "#4a475a",
+  "#f9bfce",
+  "#f6a7b9",
+  "#676678",
+  "#807c4d",
+  "#dddae9",
+  "#99986e",
+  "#de6c7a",
+  "#a9788a",
+  "#090804"
+ ]
+}
