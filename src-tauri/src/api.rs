@@ -117,7 +117,9 @@ fn handle(m: &Method, url: &str, body: &str, ctl: &Arc<Mutex<Control>>, on_chang
         (Method::Get, "/hermes-plugin") => {
             // installed layout: <install dir>/hermes-plugin/{INSTALL.md, henry_pet/}; dev builds: the repo copy
             let exe_dir = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf()));
-            let repo = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..").join("hermes-plugin");
+            // dev build: src-tauri/target/<profile>/henry_pet.exe -> <repo>/hermes-plugin (found at run time, so
+            // no build-machine path is compiled in)
+            let repo = exe_dir.as_ref().and_then(|d| d.ancestors().nth(3)).map(|r| r.join("hermes-plugin")).unwrap_or_default();
             let base = exe_dir.map(|d| d.join("hermes-plugin")).filter(|d| d.join("henry_pet").is_dir()).unwrap_or(repo);
             let found = base.join("henry_pet").is_dir();
             (200, json!({"ok": found, "dir": base.join("henry_pet").display().to_string(), "guide": base.join("INSTALL.md").display().to_string(), "version": env!("CARGO_PKG_VERSION")}).to_string())

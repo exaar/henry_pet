@@ -1,5 +1,5 @@
 name: henry_pet
-version: 0.3.0
+version: 0.4.0
 description: "Henry desktop cat: posts Hermes agent state (thinking / working / waiting / done / failed) to henry_pet's local API so her mood follows live sessions."
 author: exaar
 license: MIT
